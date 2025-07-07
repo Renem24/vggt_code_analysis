@@ -202,6 +202,8 @@ class Aggregator(nn.Module):
 
         # Reshape to [B*S, C, H, W] for patch embedding
         images = images.view(B * S, C_in, H, W)
+        ## Convert each image to a sequence of patch tokens
+        ## shape: (B * S, num_patches, embed_dim)
         patch_tokens = self.patch_embed(images)
 
         if isinstance(patch_tokens, dict):
@@ -210,19 +212,23 @@ class Aggregator(nn.Module):
         _, P, C = patch_tokens.shape
 
         # Expand camera and register tokens to match batch size and sequence length
+        ## Expand the two camera tokens and register tokens to all frames
         camera_token = slice_expand_and_flatten(self.camera_token, B, S)
         register_token = slice_expand_and_flatten(self.register_token, B, S)
 
         # Concatenate special tokens with patch tokens
+        ## Merge special tokens with patch tokens
         tokens = torch.cat([camera_token, register_token, patch_tokens], dim=1)
 
         pos = None
         if self.rope is not None:
+            ## Get 2D rotary positions for all patch tokens
             pos = self.position_getter(B * S, H // self.patch_size, W // self.patch_size, device=images.device)
 
         if self.patch_start_idx > 0:
             # do not use position embedding for special tokens (camera and register tokens)
             # so set pos to 0 for the special tokens
+            ## Keep camera/register tokens positionless by padding zeros
             pos = pos + 1
             pos_special = torch.zeros(B * S, self.patch_start_idx, 2).to(images.device).to(pos.dtype)
             pos = torch.cat([pos_special, pos], dim=1)
@@ -234,6 +240,8 @@ class Aggregator(nn.Module):
         global_idx = 0
         output_list = []
 
+        ## Alternating-attention: each block alternates between frame and global
+        ## attention as specified in self.aa_order
         for _ in range(self.aa_block_num):
             for attn_type in self.aa_order:
                 if attn_type == "frame":
@@ -249,6 +257,8 @@ class Aggregator(nn.Module):
 
             for i in range(len(frame_intermediates)):
                 # concat frame and global intermediates, [B x S x P x 2C]
+                ## Concatenate frame and global features for this iteration
+                ## resulting shape: (B, S, P, 2C)
                 concat_inter = torch.cat([frame_intermediates[i], global_intermediates[i]], dim=-1)
                 output_list.append(concat_inter)
 

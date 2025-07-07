@@ -99,6 +99,7 @@ class TrackHead(nn.Module):
             iters = self.iters
 
         # Perform tracking using the extracted features
+        ## iterative 방식으로 점 위치를 반복적으로 보정
         coord_preds, vis_scores, conf_scores = self.tracker(query_points=query_points, fmaps=feature_maps, iters=iters)
 
         return coord_preds, vis_scores, conf_scores

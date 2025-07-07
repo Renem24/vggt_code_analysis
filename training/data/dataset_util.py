@@ -67,6 +67,7 @@ def crop_image_depth_and_intrinsic_by_pp(
             - updated_intrinsic (np.ndarray): Intrinsic matrix adjusted for the crop.
             - updated_track (np.ndarray or None): Track array adjusted for the crop, or None if track was not provided.
     """
+    ## Keep track of the original image size and make a copy of the intrinsics
     original_size = np.array(image.shape)
     intrinsic = np.copy(intrinsic)
 
@@ -91,6 +92,7 @@ def crop_image_depth_and_intrinsic_by_pp(
     cy = (intrinsic[0, 2])
 
     # Compute how far we can crop in each direction
+    ## principal point을 기준으로 얼마나 잘라낼 수 있는지 계산
     if strict:
         half_x = min((target_shape[0] / 2), cx)
         half_y = min((target_shape[1] / 2), cy)
@@ -99,6 +101,7 @@ def crop_image_depth_and_intrinsic_by_pp(
         half_y = min((target_shape[1] / 2), cy, original_size[1] - cy)
 
     # Compute starting indices
+    ## 잘라낼 영역의 시작 인덱스 계산
     start_x = math.floor(cx) - math.floor(half_x)
     start_y = math.floor(cy) - math.floor(half_y)
 
@@ -106,6 +109,7 @@ def crop_image_depth_and_intrinsic_by_pp(
     assert start_y >= 0
 
     # Compute ending indices
+    ## 잘라낼 영역의 종료 인덱스 계산
     if strict:
         end_x = start_x + target_shape[0]
         end_y = start_y + target_shape[1]

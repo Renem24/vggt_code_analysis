@@ -22,7 +22,8 @@ input_obj = "forest"
 # Load and preprocess example images (replace with your own image paths)
 image_names = []
 
-image_names = glob(os.path.join(f"/home/lym/lym/Github/vggt_code_analysis/examples/kitchen/images", "00.png"))
+# image_names = glob(os.path.join(f"/home/lym/lym/Github/vggt_code_analysis/examples/kitchen/images", "00.png"))
+image_names = glob(os.path.join(f"/home/lym/lym/Github/vggt_code_analysis/examples/kitchen/images", "*.png"))
 images = load_and_preprocess_images(image_names).to(device)
 
 with torch.no_grad():
